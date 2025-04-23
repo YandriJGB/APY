@@ -1,55 +1,57 @@
-import os
-import requests
-from dotenv import load_dotenv
+import requests  # Para hacer peticiones HTTP
+from dotenv import load_dotenv  # Para cargar variables desde el archivo .env
+import os  # Para acceder a las variables de entorno del sistema
 
-
-# Load environment variables from the .env file
+# Cargar las variables del archivo .env
 load_dotenv()
 
-# Fetch API key and search engine ID from environment variables
+# Obtener clave de API y motor de búsqueda desde las variables de entorno
 API_KEY = os.getenv("API_KEY_SEARCH_GOOGLE")
 SEARCH_ENGINE_ID = os.getenv("SEARCH_ENGINE_ID")
 
-# Constants for the search query and parameters
-QUERY = 'filetype:sql "MySQL dump" (pass|password|passwd|pwd)'
-LANGUAGE = "lang_es"
+# Consulta que se quiere buscar
+query = 'filetype:sql "MySQL dump" (pass|password|passwd|pwd)'
+# Query pide los datos en cierto formato, aquí archivos SQL con nombre exacto "MySQL dump" porque está entre comillas
+# Lo último (pass|password|passwd|pwd) son palabras clave relacionadas con contraseñas
 
+lang = "lang_es"
+# lang = idioma, en este caso idioma español
 
-def build_search_url(query: str, page: int, lang: str) -> str:
-    """Build the URL for the Google Custom Search API."""
-    return f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID}&q={query}&start={page}&lr={lang}"
+# Función que construye la URL para hacer la búsqueda usando la API de Google
+def Busqueda(query, page, lang, API_KEY, SEARCH_ENGINE_ID):
+  return f"https://www.googleapis.com/customsearch/v1?key={API_KEY}&cx={SEARCH_ENGINE_ID}&q={query}&start={page}&lr={lang}"
 
+# Función que hace la petición a la API y devuelve los datos en formato JSON
+def Resultado(url):
+  response = requests.get(url)
+  return response.json()
 
-def get_search_results(url: str) -> list:
-    """Fetch the search results from the Google Custom Search API."""
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an exception for any failed request
-    data = response.json()
-    return data.get('items', [])
-
-
-def display_results(results: list) -> None:
-    """Display the search results in a readable format."""
-    if not results:
-        print("No se encontraron resultados.")
-        return
-
+# Función que muestra los resultados encontrados
+def Res(results):
+  # Si no hay resultados, mostrar mensaje
+  if not results:
+    print("No se encontraron resultados.")
+  else:
+    # Si hay resultados, mostrar título, enlace y descripción
     for item in results:
-        title = item.get('title', 'No Title')
-        link = item.get('link', 'No Link')
-        snippet = item.get('snippet', 'No Snippet')
-        print(f"Title: {title}")
-        print(f"Link: {link}")
-        print(f"Snippet: {snippet}")
-        print("-" * 80)
+      title = item.get('title')
+      link = item.get('link')
+      snippet = item.get('snippet')
 
+      print(f"Title: {title}")
+      print(f"Link: {link}")
+      print(f"Snippet: {snippet}")
+      print("-" * 80)
 
+# Función principal que organiza la ejecución
 def main():
-    """Main function to execute the search and display results."""
-    search_url = build_search_url(QUERY, page=1, lang=LANGUAGE)
-    search_results = get_search_results(search_url)
-    display_results(search_results)
+  page = 1  # Página de inicio (puede modificarse para paginar)
+  url = Busqueda(query, page, lang, API_KEY, SEARCH_ENGINE_ID)  # Construir la URL
+  data = Resultado(url)  # Hacer la petición
+  results = data.get('items', [])  # Obtener los resultados
+  Res(results)  # Mostrar los resultados
 
-
+# Ejecutar el programa
 if __name__ == "__main__":
-    main()
+  main()
+
